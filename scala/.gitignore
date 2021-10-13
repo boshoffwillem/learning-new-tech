@@ -2,6 +2,6 @@
 
 *.class
 *.log
-/null
+null/
 .bsp
-/target
+target/
