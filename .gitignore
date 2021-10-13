@@ -1,2 +1,7 @@
+# Scala ignores
+
 *.class
 *.log
+/null
+.bsp
+/target
