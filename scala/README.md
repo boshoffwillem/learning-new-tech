@@ -239,3 +239,23 @@ class Cat extends Speaker with TailWagger with Runner {
 ```
 
 ### 2.6 Collection classes
+
+Scala has the following basic collections: ```List```, ```ListBuffer```,
+```Vector```, ```ArrayBuffer```, ```Map``` and ```Set```.
+
+#### 2.6.1 Populating lists
+
+There are times when it's helpful to create sample lists that are populated
+with data, and Scala offers many ways to populate lists.
+Here are just a few:
+
+```scala
+val nums = List.range(0, 10)
+val nums = (1 to 10 by 2).toList
+val letters = ('a' to 'f').toList
+val letters = ('a' to 'f' by 2).toList
+```
+
+#### 2.6.2 Sequence methods
+
+oe
