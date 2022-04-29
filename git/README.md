@@ -18,7 +18,7 @@ The SSH URL should be available from your VCS provider.
 git remote set-url origin git@github.com:username/repositoryname.git
 ```
 
-You can run the ```git remote -v``` command again to see that the URL has been updated.
+You can run the `git remote -v` command again to see that the URL has been updated.
 
 ## Clean repository of all non-tracked artifacts
 
@@ -27,7 +27,7 @@ third-party dependencies, and non-tracked files.
 Folder bloat can especially be true for long-running projects
 that have seen many iterations on your machine.
 A trick you can use to get back to a "clean" state in your repository folder
-is to use the ```git clean``` command.
+is to use the `git clean` command.
 
 **Warning: Be sure all files you want to retain are committed;
 this is a destructive command with no recovery.**
@@ -113,3 +113,223 @@ The Git command will compare the current HEAD commit (your last commit)
 to the commit before it (before you committed) and stage the files.
 At this point, you have an opportunity to create a new branch
 and save your changes correctly.
+
+## Worktrees
+
+Ever want to checkout multiple branches at the same time?
+Or, you are busy on a branch a suddenly the is a bug that you need to look at...
+Then you first have to stage you changes, create a new branch, fix the bug,
+switch back to your branch, and unstage.
+
+With `git worktrees` you don't have to. You can keep your current branch,
+and create and checkout the branch to fix the bug on at the same time.
+
+Suppose you have a repo `Test`. Every worktree you make is effectively a new
+mini repository contained in a folder. So create a folder somewhere that will
+contain all your worktrees.
+
+I usually create a folder on the same level as the repo folder, with the same name
+and plus a `.Worktrees`, so you'll have:
+
+```
+- Test
+ - // code files
+- Test.Worktrees
+ - <worktree>
+  - // code files
+ - <worktree>
+  - // code files
+```
+
+### Creating Worktrees
+
+To create a worktree, from within you repo enter
+
+```bash
+git worktree add <path_to_worktrees_folder>/<worktree_name>
+```
+
+This will create a worktree in in your worktrees folder, and automatically
+create and checkout a branch with the same name as your worktree.
+So let's say I'm in my Test repo then I enter:
+
+```bash
+git worktree add ../Test.Worktree/UrgentBug
+```
+
+This will create the following structure:
+
+```
+- Test
+ - // code files
+- Test.Worktrees
+ - UrgentBug
+  - // code files
+```
+
+Remember UrgentBug will be like cloning the Test repo
+and create a branch `UrgentBug` and then check it out.
+
+When I am done with with my worktree I navigate back
+to the Test repo and remove it with:
+
+```bash
+git worktree remove ../Test.Worktrees/UrgentBug
+```
+
+### Custom Worktree Branch Name
+
+You can also create a worktree and specify a different name for the branch
+by simply adding the name as an argument:
+
+```bash
+git worktree add <path_to_worktrees_folder>/<worktree_name> -b <branch_name>
+```
+
+### Checkout Existing Branch in Worktree
+
+You can also create a worktree and checkout an existing branch.
+
+```bash
+git worktree add <path_to_worktrees_folder>/<worktree_name> <existing_branch>
+```
+
+## Git Bisect
+
+Git bisect is a great way to identify a commit where something broke.
+Let's say your on a branch and something you know should work isn't working
+anymore. Now you need to identify what commit in history broke it.
+
+To start the bisect process enter:
+
+```bash
+git bisect start
+```
+
+Then we need to mark the current commit as not working or bad:
+
+```bash
+git bisect bad
+```
+
+Now we need to tell git what commit in history was working;
+let's say you know that 10 commits back this feature wasn't broken.
+Get the hash of that commit and mark it as good
+
+```bash
+git bisect good <hash>
+```
+
+Bisect would've now starting traversing your history. You will continue the
+traversing by marking commits as bad until you find a commit that's working
+again, mark it as good, and then the bisecting is done.
+
+Obviously the next commit after the one that was marked good is the culprit.
+
+So let's say our history is:
+
+```bash
+123asd456bmn -- Commit 5, HEAD
+234qwe567iop -- Commit 4
+345iop678sdf -- Commit 3
+456hkjl789ds -- Commit 2
+567iop789dfg -- Commit 1
+```
+
+So let's say `Commit 5` is broken. We know the feature worked
+in `Commit 1`. We start bisecting
+
+```bash
+git bisect start
+```
+
+Mark the commit we're at (`Commit 5`) as bad.
+
+```bash
+git bisect bad
+```
+
+Then specify the commit we know was good (`Commit 1`)
+
+```bash
+git bisect good 567iop789dfg 
+```
+
+Then start bisecting.
+
+```bash
+git bisect start
+```
+
+We will now be checked out at `Commit 4`. Let's say `Commit 4` is
+also broken.
+
+```bash
+git bisect bad
+```
+
+We will now be checked out at `Commit 3`. Let's say `Commit 3` is
+also broken.
+
+```bash
+git bisect bad
+```
+
+We will now be checked out at `Commit 2`. Let's say `Commit 2` is
+working. We now mark this commit as good.
+
+```bash
+git bisect good
+```
+
+Bisect will output the first breaking commit for you
+(in this case the hash of `Commit 3`).
+
+Then to end the bisecting process enter:
+
+```bash
+git bisect reset
+```
+
+You will now be checked out at `HEAD` again.
+
+You can now, for example enter
+
+```bash
+git show <broken_commit_hash>
+```
+
+This will show you all the changes in that commit.
+
+## Interactive Rebasing
+
+Rewrite and re-organize your history.Sometimes you make a lot of local
+commits, some of these commits mights be duds, unncessary, not descriptive
+enough, etc. Before you push to origin you want cleanup your history.
+
+Run
+
+```bash
+git rebase -i <branch_to_rebase_on>
+```
+
+This will open an editor for you to edit your history in.
+Each commit will have a keyword prefixed to it that allowes
+you to modify/change that commit.
+
+These keywords are:
+
+- **p, pick**   `<commit>` = use commit
+- **r, reword** `<commit>` = use commit, but edit the commit message
+- **e, edit**   `<commit>` = use commit, but stop for amending
+- **s, squash** `<commit>` = use commit, but meld into previous commit
+- **f, fixup**  `<commit>` = like "squash", but discard this commit's log message
+- **x, exec**   `<command>` = run command (the rest of the line) using shell
+- **b, break** = stop here (continue rebase later with 'git rebase --continue')
+- **d, drop**  `<commit>` = remove commit
+- **l, label** `<label>` = label current HEAD with a name
+- **t, reset** `<label>` = reset HEAD to a label
+- **m, merge** [-C `<commit>` | -c `<commit>`] `<label>` [# `<oneline>`]
+  - create a merge commit using the original merge commit's
+  - message (or the oneline, if no original merge commit was
+  - specified). Use -c `<commit>` to reword the commit message.
