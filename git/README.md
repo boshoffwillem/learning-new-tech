@@ -128,41 +128,32 @@ Suppose you have a repo `Test`. Every worktree you make is effectively a new
 mini repository contained in a folder. So create a folder somewhere that will
 contain all your worktrees.
 
-I usually create a folder on the same level as the repo folder, with the same name
-and plus a `.Worktrees`, so you'll have:
-
-```
-- Test
- - // code files
-- Test.Worktrees
- - <worktree>
-  - // code files
- - <worktree>
-  - // code files
-```
-
 ### Creating Worktrees
 
-To create a worktree, from within you repo enter
+To create a worktree, do a `bare` clone of the repo
 
 ```bash
-git worktree add <path_to_worktrees_folder>/<worktree_name>
+git clone --bare <repo_url>
 ```
 
-This will create a worktree in in your worktrees folder, and automatically
+Then simply start creating worktrees:
+
+```bash
+git worktree add <worktree_name>
+```
+
+This will create a worktree (new folder) in your bare repo folder, and automatically
 create and checkout a branch with the same name as your worktree.
 So let's say I'm in my Test repo then I enter:
 
 ```bash
-git worktree add ../Test.Worktree/UrgentBug
+git worktree add UrgentBug
 ```
 
 This will create the following structure:
 
 ```
 - Test
- - // code files
-- Test.Worktrees
  - UrgentBug
   - // code files
 ```
@@ -170,11 +161,10 @@ This will create the following structure:
 Remember UrgentBug will be like cloning the Test repo
 and create a branch `UrgentBug` and then check it out.
 
-When I am done with with my worktree I navigate back
-to the Test repo and remove it with:
+When I am done with with my worktree I remove it with:
 
 ```bash
-git worktree remove ../Test.Worktrees/UrgentBug
+git worktree remove UrgentBug
 ```
 
 ### Custom Worktree Branch Name
@@ -183,7 +173,7 @@ You can also create a worktree and specify a different name for the branch
 by simply adding the name as an argument:
 
 ```bash
-git worktree add <path_to_worktrees_folder>/<worktree_name> -b <branch_name>
+git worktree add <worktree_name> -b <branch_name>
 ```
 
 ### Checkout Existing Branch in Worktree
@@ -191,8 +181,18 @@ git worktree add <path_to_worktrees_folder>/<worktree_name> -b <branch_name>
 You can also create a worktree and checkout an existing branch.
 
 ```bash
-git worktree add <path_to_worktrees_folder>/<worktree_name> <existing_branch>
+git worktree add <worktree_name> <existing_branch>
 ```
+
+### Submodules
+
+If have a repo with submodules, you will have to do
+
+```bash
+git submodule update
+```
+
+everytime you make a new worktree.
 
 ## Git Bisect
 
